@@ -1,47 +1,39 @@
 package com.krev.user_service.service;
 
-import com.krev.user_service.dao.UserDao;
-import com.krev.user_service.dao.UserEntity;
 import com.krev.user_service.dto.UserCreateRequest;
 import com.krev.user_service.dto.UserResponse;
 import com.krev.user_service.exception.UserNotFoundException;
+import com.krev.user_service.model.User;
+import com.krev.user_service.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Service
 public class UserService {
     @Autowired
-    private UserDao userDao;
-
-    private final AtomicLong idGenerator = new AtomicLong();
+    private UserRepository userRepository;
 
     public UserResponse createUser(UserCreateRequest request) {
-        Long id = idGenerator.getAndIncrement();
-        UserEntity userEntity = new UserEntity(id, request.name(), request.email());
+        User user = new User(request.name(), request.email());
 
-        userDao.save(userEntity);
-        return new UserResponse(id, userEntity.name(), userEntity.email());
+        User savedUser = userRepository.save(user);
+        return new UserResponse(savedUser.getId(), savedUser.getName(), savedUser.getEmail());
     }
 
-    public UserResponse findUserById(Long id) {
-        Optional<UserEntity> userOpt = userDao.findById(id);
-        if (userOpt.isEmpty()) {
-            throw new UserNotFoundException("User with id " + id + " not found");
-        }
-        UserEntity user = userOpt.get();
-        return new UserResponse(id, user.name(), user.email());
+    public UserResponse findUserById(String id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("User with id " + id + " not found"));
+        return new UserResponse(id, user.getName(), user.getEmail());
     }
 
     public List<UserResponse> getAllUsers() {
-        List<UserEntity> users = userDao.getAll();
+        List<User> users = userRepository.findAll();
 
         return users.stream()
-                .map(user -> new UserResponse(user.id(), user.name(), user.email()))
+                .map(user -> new UserResponse(user.getId(), user.getName(), user.getEmail()))
                 .collect(Collectors.toList());
     }
 }

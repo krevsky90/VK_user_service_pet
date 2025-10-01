@@ -1,6 +1,18 @@
 server:
   port: 8080
 
+
 logging:
   level:
     com.krev: DEBUG
+    org.springframework.data.mongodb.core: DEBUG
+
+spring:
+  data:
+    mongodb:
+      # host: localhost - if we want to use mongoDB. but start out application as usual Java application, WITHOUT packaging to docker-image
+      host: mongo  # имя сервиса из docker-compose
+      # username: не нужно без auth
+      # password:
+      port: 27017
+      database: userdb

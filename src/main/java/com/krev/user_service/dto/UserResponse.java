@@ -1,4 +1,4 @@
 package com.krev.user_service.dto;
 
-public record UserResponse(Long id, String name, String email) {
+public record UserResponse(String id, String name, String email) {
 }
