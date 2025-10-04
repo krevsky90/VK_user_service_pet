@@ -1,5 +1,6 @@
 package com.krev.user_service.service;
 
+import com.krev.user_service.client.NotificationClient;
 import com.krev.user_service.dto.UserCreateRequest;
 import com.krev.user_service.dto.UserResponse;
 import com.krev.user_service.exception.UserNotFoundException;
@@ -15,12 +16,19 @@ import java.util.stream.Collectors;
 public class UserService {
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private NotificationClient notificationClient;
 
     public UserResponse createUser(UserCreateRequest request) {
         User user = new User(request.name(), request.email());
 
         User savedUser = userRepository.save(user);
-        return new UserResponse(savedUser.getId(), savedUser.getName(), savedUser.getEmail());
+        UserResponse userResponse = new UserResponse(savedUser.getId(), savedUser.getName(), savedUser.getEmail());
+
+        //send notification before we return the responce
+        notificationClient.notifyUserCreated(userResponse);
+
+        return userResponse;
     }
 
     public UserResponse findUserById(String id) {

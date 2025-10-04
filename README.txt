@@ -1,7 +1,80 @@
-Ниже — полный код и инфраструктура для Недели 2, включающие:
+Ниже — полный код и инфраструктура для Недели 3, включающие:
 
-Замену in-memory хранилища на MongoDB
-Подключение Spring Data MongoDB
-Запуск MongoDB через Docker
-Контейнеризация самого user-service через Dockerfile
-Оркестрация с помощью docker-compose.yml
+добавление Notification Service,
+который получает через синхронный REST API колл уведомление (RestTemplate) от user service о создании юзера.
+Контейнеризация notification-service через Dockerfile
+Оба сервиса запускаются в рамках одного докер контейнера - оркестрация с помощью docker-compose.yml
+
+
+Lessons learnt:
+1) each microservice should have its own Dockerfile, BUT there should be the only ONE common docker-compose that builds all these services!
+2) RestTemplate bean
+    @Bean
+        public RestTemplate restTemplate() {
+            return new RestTemplate();
+        }
+    can be created in separate class or (technically) anywhere!
+
+3) to build url of microservice (to use it for REST API calls), we can use
+    a) @Value:
+        example:    public NotificationClient(@Value("${notification.service.url:http://localhost:8081}")
+    b) set these @Value-s in separate AppConfig class like
+        @Component
+        public class AppConfig {
+            @Value("${microservice2-host:localhost}")
+            private String host2;
+
+            public String getHost2() { return host2; }
+        }
+      where 'localhost' will be as default value which is ok when we launch microservice locally
+    + we have to set environment variables (for non-local launch) in docker-compose file.
+        example:
+            user-service:
+              ...
+              environment:
+                - NOTIFICATION_SERVICE_URL=http://notification-service:8081
+
+        ATTENTION: NOTIFICATION_SERVICE_URL and are dependent names!
+            and Spring tries to convert notification.service.url to NOTIFICATION_SERVICE_URL and then tries to find env variable
+
+4) to use remote debug (when you build and deploy microservice to docker, rather than to launch locally), you need
+    a) to create separate docker-compose-debug file which will also contain
+        ports:
+        - "5005:5005" # expose debug port
+        environment:
+              - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+        NOTE:  #*: is mandatory for JDK 9+
+    b) to add Configuration in Intellj idea:
+        Remote JVM debug:
+            Debugger mode = Attach to remote JVM
+            Transport: Socket
+            Host: localhost
+            Port: 5005
+            and select appropriate 'Use module classpath'
+
+5) How to rebuild and redeploy only one service?
+    # Запустить все сервисы в фоне (-d = detach mode, means Intellj Idea's console is no attached to logs of deployed microservice)
+    docker-compose up -d
+    # rebuild only the required service
+    docker-compose build notification-service
+    # redeploy only rebuilt image (--no-deps means no dependencies):
+    docker-compose up -d --no-deps notification-service
+
+    #rebuild + redeploy:
+    docker-compose up -d --build --no-deps notification-service
+
+NOTE:
+1) if you launch microservices by different docker-compose files, they are in different networks!
+    it means they cannot reach each other by name (like http://notification-service:8081/...)
+    since docker can use its DNS only when the services are launched by common docker-compose file.
+
+    WA: you can create network manually and connect the services using docker commands.
+        but docker does is automatically when docker-compose is common for both services. So good practice is to have the only docker-compose file
+
+1.2) if you set (in docker-file, in env variables) url like http://localhost:8081,
+    it won't work since localhost for the particular service is this service. It will try to connect to itself,
+    not to your laptop's localhost
+
+    So if you want ms1 call ms2 - use ms2:exposed_port
+    if you want to call ms2 from your laptop - use localhost:exposed_port
+
