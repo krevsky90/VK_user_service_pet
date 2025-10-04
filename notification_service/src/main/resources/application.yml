@@ -1,0 +1,6 @@
+server:
+  port: 8081
+
+logging:
+  level:
+    com.krev.notification_service: info
