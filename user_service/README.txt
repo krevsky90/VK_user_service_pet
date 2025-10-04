@@ -78,3 +78,23 @@ NOTE:
     So if you want ms1 call ms2 - use ms2:exposed_port
     if you want to call ms2 from your laptop - use localhost:exposed_port
 
+2) Each microservice should have separate gradle file => separate Idea project
+    BUT all microservices should be stored in monorepo
+    docker-compose file should be also in monorepo
+
+    i.e. to develop smth:
+    create local folder
+    git: git clone <repo_name>
+    git: cd <your_folder>
+    git: git checkout <branch_name>
+    Create Idea project based on <your_folder>
+
+    to create image and docker container (in Idea):
+    cd ..
+    use docker-compose up
+
+3) to change smth in git by git-bash:
+    git add <file>
+    git commit -m "your message"
+    git push origin <branch_name>
+
