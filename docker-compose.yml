@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: krev_mongodb
+    ports:
+      - "27017:27017"  # Map host port 27017 to container port 27017
+    volumes:
+      - mongodb_data:/data/db # Persist data using a named volume
+    environment:
+      #MONGO_INITDB_ROOT_USERNAME: admin
+      #MONGO_INITDB_ROOT_PASSWORD: lifter13
+      MONGO_INITDB_DATABASE: userdb
+    restart: always # Ensure the container restarts if it crashes
+
+  user-service:
+    build: 
+      context: ./user_service
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8080:8080" # expose the application port
+    depends_on:
+      - mongodb
+    environment:
+      - SPRING_DATA_MONGODB_HOST=mongodb
+      - SPRING_DATA_MONGODB_PORT=27017
+      - SPRING_DATA_MONGODB_DATABASE=userdb
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8081   # to send REST to notification-service
+
+  notification-service:
+    build: 
+      context: ./notification_service
+      dockerfile: Dockerfile  
+    container_name: notification_service
+    ports:
+      - "8081:8081" # expose the application port
+
+volumes:
+  mongodb_data: # Define the named volume for data persistence
