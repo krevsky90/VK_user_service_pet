@@ -1,5 +1,6 @@
 package com.krev.user_service.client;
 
+import com.krev.user_service.dto.UserEvent;
 import com.krev.user_service.dto.UserResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,18 +30,23 @@ public class NotificationClient {
     }
 
     public void notifyUserCreated(UserResponse userResponse) {
-        Map<String, String> event = new HashMap<>();
-        event.put("userId", userResponse.id());
-        event.put("name", userResponse.name());
-        event.put("email", userResponse.email());
-        event.put("eventType", "USER_CREATED");
+        //here we use UserEvent class which is copied from notification_service module
+        UserEvent event = new UserEvent(
+                userResponse.id(),
+                userResponse.name(),
+                userResponse.email(),
+                "USER_CREATED"
+        );
 
         String url = notificationServiceUrl + "/api/v1/notify/user-created";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<Map<String, String>> request = new HttpEntity<>(event, headers);
+        // RestTemplate сам сериализует event в JSON через Jackson
+        // Spring Boot автоматически настраивает RestTemplate с MappingJackson2HttpMessageConverter
+        // При отправке объекта UserEvent он автоматически сериализуется в JSO
+        HttpEntity<UserEvent> request = new HttpEntity<>(event, headers);
 
         try {
             restTemplate.postForEntity(url, request, Void.class);
