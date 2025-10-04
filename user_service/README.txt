@@ -63,6 +63,20 @@ Lessons learnt:
     #rebuild + redeploy:
     docker-compose up -d --build --no-deps notification-service
 
+6) How to optimize Dockerfile to build image faster?
+    Use multi stages!
+    В нашем случае 2 стейджа:
+    1) скачать jdk + скопировать gradle-related файлы (из локальной папки в WORKDIR)
+    2) скачать jre + заюзать те файлы, к-ые имеются на стадии 1 (а остальное нам не надо!)
+    В финальный имадж войдут только слои из последнего (2го стейджа)
+    ПРАВИЛО: если что-то меняется на слое N, то все последующие слои будут пересобраны.
+    Именно поэтому, когда на стадии 1 мы копировали все файлы (а не только gradle-related),
+    у нас любое изменение в проекте (например, файла README или кода) вызывало пересборку стадии 1
+    (т.к. там происходило копирование обновленных файлов, к-ые и не нужны для стадии 1).
+    НО если мы копируем только отдельные реально нужные файлы, то стадия 1 не пересобирает слои на каждый чих.
+    (а только если поменялись те файлы, к-ые копируются шагамии из стадии 1)
+    В этом и есть оптимизация!
+
 NOTE:
 1) if you launch microservices by different docker-compose files, they are in different networks!
     it means they cannot reach each other by name (like http://notification-service:8081/...)
