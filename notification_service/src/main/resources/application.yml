@@ -4,3 +4,14 @@ server:
 logging:
   level:
     com.krev.notification_service: info
+
+application:
+  kafka:
+    topic: "user.created"
+
+spring:
+  kafka:
+    consumer:
+      group-id: "notif-service"
+      client-id: "demo-consumer"
+      auto-offset-reset: earliest
