@@ -1,9 +1,14 @@
 Ниже — полный код и инфраструктура для Недели 3, включающие:
 
-добавление Notification Service,
-который получает через синхронный REST API колл уведомление (RestTemplate) от user service о создании юзера.
-Контейнеризация notification-service через Dockerfile
-Оба сервиса запускаются в рамках одного докер контейнера - оркестрация с помощью docker-compose.yml
+добавление Kafka
+взаимодействие между user-service и notification-service делается через kafka.
+
+todo:
+Запустить Kafka + ZooKeeper в Docker
+Настроить продюсера в user-service (публикация события user.created)
+Настроить консьюмера в notification-service (обработка события)
+Убрать REST-вызов из user-service
+Обновить docker-compose.yml
 
 
 Lessons learnt:
@@ -62,6 +67,10 @@ Lessons learnt:
 
     #rebuild + redeploy:
     docker-compose up -d --build --no-deps notification-service
+
+    NOTE: каждый запуск docker-compose up -d --build создает новый образ, перемещает на него тег (название_папки + название_модуля),
+        а предыд образ теряет метку (и становится none). Занимает место на диске, нужно иногда чистить:
+            docker system prune
 
 6) How to optimize Dockerfile to build image faster?
     Use multi stages!

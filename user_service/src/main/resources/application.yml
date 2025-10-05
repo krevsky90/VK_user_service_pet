@@ -16,3 +16,11 @@ spring:
       # password:
       port: 27017
       database: userdb
+
+  kafka:
+    producer:
+      client-id: "demo-producer"  # to understand who produced the message
+
+application:
+  kafka:
+    topic: "user.created"
